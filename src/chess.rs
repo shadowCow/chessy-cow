@@ -2,12 +2,12 @@
 pub struct Chess {
     board: [Option<SquareOccupier>; 64],
     player_turn: Player,
-    white_has_castled: bool,
-    black_has_castled: bool,
+    white_castling_conditions: CastlingConditions,
+    black_castling_conditions: CastlingConditions,
 }
 
 impl Chess {
-    fn new() -> Chess {
+    pub fn new() -> Chess {
         Chess {
             board: [
                 Some(SquareOccupier { player: Player::White, piece: ChessPiece::Rook }),
@@ -76,16 +76,78 @@ impl Chess {
                 Some(SquareOccupier { player: Player::Black, piece: ChessPiece::Rook }),
             ],
             player_turn: Player::White,
-            white_has_castled: false,
-            black_has_castled: false,
+            white_castling_conditions: CastlingConditions {
+                king_has_moved: false,
+                kingside_rook_has_moved: false,
+                queenside_rook_has_moved: false,
+            },
+            black_castling_conditions: CastlingConditions {
+                king_has_moved: false,
+                kingside_rook_has_moved: false,
+                queenside_rook_has_moved: false,
+            },
         }
     }
 
-    fn is_legal_move(&self, action: &ChessAction) -> bool {
-
+    fn is_legal_move(&self, action: &ChessAction, last_move: &PieceMove) -> bool {
+        match action {
+            ChessAction::MovePiece(piece_move) => {
+                match self.board[piece_move.from] {
+                    Some(occupier) => {
+                        match occupier.piece {
+                            ChessPiece::King => self.is_legal_king_move(&occupier.player, piece_move),
+                            ChessPiece::Queen => self.is_legal_queen_move(&occupier.player, piece_move),
+                            ChessPiece::Bishop => self.is_legal_bishop_move(&occupier.player, piece_move),
+                            ChessPiece::Knight => self.is_legal_knight_move(&occupier.player, piece_move),
+                            ChessPiece::Rook => self.is_legal_rook_move(&occupier.player, piece_move),
+                            ChessPiece::Pawn => self.is_legal_pawn_move(&occupier.player, piece_move, last_move),
+                        }
+                    },
+                    None => false,
+                }
+            },
+            ChessAction::CastleKingSide(player) => self.is_legal_kingside_castle(player),
+            ChessAction::CastleQueenSide(player) => self.is_legal_queenside_castle(player),
+        }
     }
 
-    fn is_legal_rook_move(&self, player: Player, piece_move: PieceMove) -> bool {
+    fn is_legal_kingside_castle(&self, player: &Player) -> bool {
+        match player {
+            Player::White =>
+                !self.white_castling_conditions.king_has_moved &&
+                !self.white_castling_conditions.kingside_rook_has_moved &&
+                !self.is_square_attacked_by_opponent(ChessSquare::E1.to_square_index()) &&
+                !self.is_square_attacked_by_opponent(ChessSquare::F1.to_square_index()) &&
+                !self.is_square_attacked_by_opponent(ChessSquare::G1.to_square_index()),
+            Player::Black =>
+                !self.black_castling_conditions.king_has_moved &&
+                !self.black_castling_conditions.kingside_rook_has_moved &&
+                !self.is_square_attacked_by_opponent(ChessSquare::E8.to_square_index()) &&
+                !self.is_square_attacked_by_opponent(ChessSquare::F8.to_square_index()) &&
+                !self.is_square_attacked_by_opponent(ChessSquare::G8.to_square_index()),
+        }
+    }
+
+    fn is_legal_queenside_castle(&self, player: &Player) -> bool {
+        match player {
+            Player::White =>
+                !self.white_castling_conditions.king_has_moved &&
+                !self.white_castling_conditions.queenside_rook_has_moved &&
+                !self.is_square_attacked_by_opponent(ChessSquare::E1.to_square_index()) &&
+                !self.is_square_attacked_by_opponent(ChessSquare::D1.to_square_index()) &&
+                !self.is_square_attacked_by_opponent(ChessSquare::C1.to_square_index()) &&
+                !self.is_square_attacked_by_opponent(ChessSquare::B1.to_square_index()),
+            Player::Black =>
+                !self.black_castling_conditions.king_has_moved &&
+                !self.black_castling_conditions.queenside_rook_has_moved &&
+                !self.is_square_attacked_by_opponent(ChessSquare::E8.to_square_index()) &&
+                !self.is_square_attacked_by_opponent(ChessSquare::D8.to_square_index()) &&
+                !self.is_square_attacked_by_opponent(ChessSquare::C8.to_square_index()) &&
+                !self.is_square_attacked_by_opponent(ChessSquare::B8.to_square_index()),
+        }
+    }
+
+    fn is_legal_rook_move(&self, player: &Player, piece_move: &PieceMove) -> bool {
         if Chess::is_square_occupied_by_own_piece(self, player, piece_move.to) {
             false
         } else {
@@ -94,7 +156,7 @@ impl Chess {
         }
     }
 
-    fn is_legal_bishop_move(&self, player: Player, piece_move: PieceMove) -> bool {
+    fn is_legal_bishop_move(&self, player: &Player, piece_move: &PieceMove) -> bool {
         if Chess::is_square_occupied_by_own_piece(self, player, piece_move.to) {
             false
         } else {
@@ -102,7 +164,7 @@ impl Chess {
         }
     }
 
-    fn is_legal_knight_move(&self, player: Player, piece_move: PieceMove) -> bool {
+    fn is_legal_knight_move(&self, player: &Player, piece_move: &PieceMove) -> bool {
         let row_diff = Chess::row_diff(piece_move);
         let col_diff = Chess::column_diff(piece_move);
 
@@ -113,7 +175,7 @@ impl Chess {
         }
     }
 
-    fn is_legal_queen_move(&self, player: Player, piece_move: PieceMove) -> bool {
+    fn is_legal_queen_move(&self, player: &Player, piece_move: &PieceMove) -> bool {
         if Chess::is_square_occupied_by_own_piece(self, player, piece_move.to) {
             false
         } else {
@@ -123,18 +185,113 @@ impl Chess {
         }
     }
 
-    fn is_legal_king_move(&self, player: Player, piece_move: PieceMove) -> bool {}
+    fn is_legal_king_move(&self, player: &Player, piece_move: &PieceMove) -> bool {
+        let row_from = piece_move.from / 8;
+        let col_from = piece_move.from % 8;
+        let row_to = piece_move.to / 8;
+        let col_to = piece_move.to % 8;
+    
+        // Check if the move is within the king's range (adjacent square or castling)
+        if (row_to == row_from && (col_to == col_from + 1 || col_to == col_from - 1)) // Horizontal move
+            || (col_to == col_from && (row_to == row_from + 1 || row_to == row_from - 1)) // Vertical move
+            || (row_to == row_from + 1 && col_to == col_from + 1) // Diagonal move
+            || (row_to == row_from - 1 && col_to == col_from + 1) // Diagonal move
+            || (row_to == row_from + 1 && col_to == col_from - 1) // Diagonal move
+            || (row_to == row_from - 1 && col_to == col_from - 1) // Diagonal move
+        {
+            if self.is_square_attacked_by_opponent(piece_move.to) {
+                // king cannot put himself in check
+                return false;
+            } else {
+                // Check if the target square is unoccupied or contains an opponent's piece
+                if let Some(target_occupier) = self.board[piece_move.to] {
+                    if target_occupier.player != *player {
+                        return true; // Capture is allowed
+                    }
+                } else {
+                    return true; // Move to an empty square
+                }
+            }
+        }
+    
+        false // Move is not legal for a king
+    }
+    
+    fn is_legal_pawn_move(&self, player: &Player, piece_move: &PieceMove, last_move: &PieceMove) -> bool {
+        let from = piece_move.from;
+        let to = piece_move.to;
+        let board = self.board;
 
-    fn is_legal_pawn_move(&self, player: Player, piece_move: PieceMove) -> bool {}
+        let row_from = from / 8;
+        let col_from = from % 8;
+        let row_to = to / 8;
+        let col_to = to % 8;
 
-    fn is_square_occupied_by_own_piece(&self, player: Player, square: usize) -> bool {
+        let one_square_target = if *player == Player::White {
+            row_from + 1
+        } else {
+            row_from - 1
+        };
+        let two_square_target = if *player == Player::White {
+            row_from + 2
+        } else {
+            row_from - 2
+        };
+        let starting_row = if *player == Player::White {
+            2
+        } else {
+            7
+        };
+
+        // Check if the pawn is moving forward by one square
+        if col_from == col_to && row_to == one_square_target && board[to].is_none() {
+            return true;
+        }
+
+        // Check if the pawn is moving forward by two squares from the starting rank
+        if col_from == col_to && row_to == two_square_target && row_from == starting_row
+            && board[one_square_target].is_none() && board[to].is_none() {
+            return true;
+        }
+
+        // Check if the pawn is capturing diagonally
+        if (col_to == col_from + 1 || col_to == col_from - 1) && row_to == one_square_target {
+            if let Some(occupier) = board[to] {
+                if occupier.player != *player {
+                    return true;
+                }
+            } else {
+                // Check for en passant capture
+                let last_row_from = last_move.from / 8;
+                let last_col_from = last_move.from % 8;
+                let last_row_to = last_move.to / 8;
+                let last_col_to = last_move.to % 8;
+
+                let capture_to_last_col = col_to == last_col_to;
+                let pawns_on_same_rank = row_from == last_row_to;
+                let last_was_two_square_move = last_row_from.abs_diff(last_row_to) == 2;
+
+                if capture_to_last_col && pawns_on_same_rank && last_was_two_square_move {
+                    if let Some(SquareOccupier { player: last_player, piece: ChessPiece::Pawn }) = board[last_move.to] {
+                        if last_player != *player {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+
+        false
+    }
+    
+    fn is_square_occupied_by_own_piece(&self, player: &Player, square: usize) -> bool {
         match self.board[square] {
-            Some(occupier) => occupier.player == player,
+            Some(occupier) => occupier.player == *player,
             None => false,
         }
     }
 
-    fn is_legal_diagonal_move(&self, piece_move: PieceMove) -> bool {
+    fn is_legal_diagonal_move(&self, piece_move: &PieceMove) -> bool {
         let from_row = Chess::get_row(piece_move.from);
         let from_column = Chess::get_column(piece_move.from);
 
@@ -166,7 +323,7 @@ impl Chess {
         true // No occupied square along the diagonal  
     }
 
-    fn is_legal_horizontal_move(&self, piece_move: PieceMove) -> bool {
+    fn is_legal_horizontal_move(&self, piece_move: &PieceMove) -> bool {
         let from_row = piece_move.from / 8;
         let from_col = piece_move.from % 8;
         let to_row = piece_move.to / 8;
@@ -189,7 +346,7 @@ impl Chess {
         true // No occupied square between the indices
     }
 
-    fn is_legal_vertical_move(&self, piece_move: PieceMove) -> bool {
+    fn is_legal_vertical_move(&self, piece_move: &PieceMove) -> bool {
         let from_row = piece_move.from / 8;
         let from_col = piece_move.from % 8;
         let to_row = piece_move.to / 8;
@@ -212,28 +369,28 @@ impl Chess {
         true // No occupied square between the indices
     }
 
-    fn is_same_row(piece_move: PieceMove) -> bool {
+    fn is_same_row(piece_move: &PieceMove) -> bool {
         Chess::get_row(piece_move.from) == Chess::get_row(piece_move.to)
     }
-    fn is_same_column(piece_move: PieceMove) -> bool {
+    fn is_same_column(piece_move: &PieceMove) -> bool {
         Chess::get_column(piece_move.from) == Chess::get_column(piece_move.to)
     }
-    fn row_diff(piece_move: PieceMove) -> usize {
+    fn row_diff(piece_move: &PieceMove) -> usize {
         let from_row = Chess::get_row(piece_move.from);
 
         let to_row = Chess::get_row(piece_move.from);
 
         from_row.abs_diff(to_row)
     }
-    fn column_diff(piece_move: PieceMove) -> usize {
+    fn column_diff(piece_move: &PieceMove) -> usize {
         let from_column = Chess::get_column(piece_move.from);
 
         let to_column = Chess::get_column(piece_move.to);
 
         from_column.abs_diff(to_column)
     }
-    fn is_square_protected(&self, square: usize) -> bool {
-
+    fn is_square_attacked_by_opponent(&self, square: usize) -> bool {
+        true
     }
     fn get_row(square: usize) -> usize {
         square / 8
@@ -243,7 +400,7 @@ impl Chess {
     }
 
     fn apply_move(&self, action: &ChessAction) -> MoveResult {
-
+        MoveResult::InvalidMove { reason: "not implemented".to_owned() }
     }
 }
 
@@ -275,6 +432,42 @@ pub enum ChessPiece {
     Knight,
     Pawn,
 }
+
+#[derive(Debug, PartialEq, Clone, Copy)]
+struct CastlingConditions {
+    king_has_moved: bool,
+    kingside_rook_has_moved: bool,
+    queenside_rook_has_moved: bool,
+}
+
+#[derive(Debug, PartialEq)]
+pub enum MoveResult {
+    MadeMove { outcome: GameOutcome },
+    InvalidMove { reason: String },
+}
+
+#[derive(Debug, PartialEq)]
+pub enum GameOutcome {
+    Unfinished,
+    Tie,
+    Winner(Player),
+}
+
+#[derive(Debug, PartialEq, Copy, Clone)]
+pub enum Player {
+    White,
+    Black,
+}
+
+impl Player {
+    pub fn next_turn(&self) -> Player {
+        match self {
+            Player::White => Player::Black,
+            Player::Black => Player::White,
+        }
+    }
+}
+
 
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub enum ChessSquare {
@@ -348,98 +541,79 @@ impl ChessSquare {
     fn to_square_index(&self) -> usize {
         match self {
             ChessSquare::A1 => 0,
-            ChessSquare::A2 => 1,
-            ChessSquare::A3 => 2,
-            ChessSquare::A4 => 3,
-            ChessSquare::A5 => 4,
-            ChessSquare::A6 => 5,
-            ChessSquare::A7 => 6,
-            ChessSquare::A8 => 7,
-            ChessSquare::B1 => 8,
+            ChessSquare::A2 => 8,
+            ChessSquare::A3 => 16,
+            ChessSquare::A4 => 24,
+            ChessSquare::A5 => 32,
+            ChessSquare::A6 => 40,
+            ChessSquare::A7 => 48,
+            ChessSquare::A8 => 56,
+            ChessSquare::B1 => 1,
             ChessSquare::B2 => 9,
-            ChessSquare::B3 => 10,
-            ChessSquare::B4 => 11,
-            ChessSquare::B5 => 12,
-            ChessSquare::B6 => 13,
-            ChessSquare::B7 => 14,
-            ChessSquare::B8 => 15,
-            ChessSquare::C1 => 16,
-            ChessSquare::C2 => 17,
+            ChessSquare::B3 => 17,
+            ChessSquare::B4 => 25,
+            ChessSquare::B5 => 33,
+            ChessSquare::B6 => 41,
+            ChessSquare::B7 => 49,
+            ChessSquare::B8 => 57,
+            ChessSquare::C1 => 2,
+            ChessSquare::C2 => 10,
             ChessSquare::C3 => 18,
-            ChessSquare::C4 => 19,
-            ChessSquare::C5 => 20,
-            ChessSquare::C6 => 21,
-            ChessSquare::C7 => 22,
-            ChessSquare::C8 => 23,
-            ChessSquare::D1 => 24,
-            ChessSquare::D2 => 25,
-            ChessSquare::D3 => 26,
+            ChessSquare::C4 => 26,
+            ChessSquare::C5 => 34,
+            ChessSquare::C6 => 42,
+            ChessSquare::C7 => 50,
+            ChessSquare::C8 => 58,
+            ChessSquare::D1 => 3,
+            ChessSquare::D2 => 11,
+            ChessSquare::D3 => 19,
             ChessSquare::D4 => 27,
-            ChessSquare::D5 => 28,
-            ChessSquare::D6 => 29,
-            ChessSquare::D7 => 30,
-            ChessSquare::D8 => 31,
-            ChessSquare::E1 => 32,
-            ChessSquare::E2 => 33,
-            ChessSquare::E3 => 34,
-            ChessSquare::E4 => 35,
+            ChessSquare::D5 => 35,
+            ChessSquare::D6 => 43,
+            ChessSquare::D7 => 51,
+            ChessSquare::D8 => 59,
+            ChessSquare::E1 => 4,
+            ChessSquare::E2 => 12,
+            ChessSquare::E3 => 20,
+            ChessSquare::E4 => 28,
             ChessSquare::E5 => 36,
-            ChessSquare::E6 => 37,
-            ChessSquare::E7 => 38,
-            ChessSquare::E8 => 39,
-            ChessSquare::F1 => 40,
-            ChessSquare::F2 => 41,
-            ChessSquare::F3 => 42,
-            ChessSquare::F4 => 43,
-            ChessSquare::F5 => 44,
+            ChessSquare::E6 => 44,
+            ChessSquare::E7 => 52,
+            ChessSquare::E8 => 60,
+            ChessSquare::F1 => 5,
+            ChessSquare::F2 => 13,
+            ChessSquare::F3 => 21,
+            ChessSquare::F4 => 29,
+            ChessSquare::F5 => 37,
             ChessSquare::F6 => 45,
-            ChessSquare::F7 => 46,
-            ChessSquare::F8 => 47,
-            ChessSquare::G1 => 40,
-            ChessSquare::G2 => 49,
-            ChessSquare::G3 => 50,
-            ChessSquare::G4 => 51,
-            ChessSquare::G5 => 52,
-            ChessSquare::G6 => 53,
+            ChessSquare::F7 => 53,
+            ChessSquare::F8 => 61,
+            ChessSquare::G1 => 6,
+            ChessSquare::G2 => 14,
+            ChessSquare::G3 => 22,
+            ChessSquare::G4 => 30,
+            ChessSquare::G5 => 38,
+            ChessSquare::G6 => 46,
             ChessSquare::G7 => 54,
-            ChessSquare::G8 => 55,
-            ChessSquare::H1 => 56,
-            ChessSquare::H2 => 57,
-            ChessSquare::H3 => 58,
-            ChessSquare::H4 => 59,
-            ChessSquare::H5 => 60,
-            ChessSquare::H6 => 61,
-            ChessSquare::H7 => 62,
+            ChessSquare::G8 => 62,
+            ChessSquare::H1 => 7,
+            ChessSquare::H2 => 15,
+            ChessSquare::H3 => 23,
+            ChessSquare::H4 => 31,
+            ChessSquare::H5 => 39,
+            ChessSquare::H6 => 47,
+            ChessSquare::H7 => 55,
             ChessSquare::H8 => 63,
         }
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-#[derive(Debug, PartialEq)]
-pub enum MoveResult {
-    MadeMove { outcome: GameOutcome },
-    InvalidMove { reason: String },
-}
-
-#[derive(Debug, PartialEq)]
-pub enum GameOutcome {
-    Unfinished,
-    Tie,
-    Winner(Player),
-}
-
-#[derive(Debug, PartialEq, Copy, Clone)]
-pub enum Player {
-    White,
-    Black,
-}
-
-impl Player {
-    pub fn next_turn(&self) -> Player {
-        match self {
-            Player::White => Player::Black,
-            Player::Black => Player::White,
-        }
+    #[test]
+    fn test_something() {
+        
     }
 }
