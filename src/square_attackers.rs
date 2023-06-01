@@ -1,22 +1,45 @@
 use std::collections::HashMap;
 
-#[derive(Debug)]
-struct AttackingPieces {
-    map: HashMap<usize, Vec<SquareOccupier>>,
+use crate::pieces::{Player, ChessPiece};
+
+#[derive(Debug, Clone)]
+pub struct AttackingPieces {
+    by_square: HashMap<usize, Vec<SquareOccupier>>,
 }
 
 impl AttackingPieces {
-    fn new() -> Self {
+    pub fn new() -> Self {
         AttackingPieces {
-            map: HashMap::new(),
+            by_square: HashMap::new(),
         }
     }
 
-    fn add_attacker(&mut self, square: usize, attacker: SquareOccupier) {
-        self.map.entry(square).or_insert(Vec::new()).push(attacker);
+    pub fn add_attacker(&mut self, square: usize, attacker: SquareOccupier) {
+        self.by_square.entry(square).or_insert(Vec::new()).push(attacker);
     }
 
-    fn get_attacking_pieces(&self, square: usize) -> Option<&Vec<SquareOccupier>> {
-        self.map.get(&square)
+    pub fn get_attacking_pieces(&self, square: usize) -> Option<&Vec<SquareOccupier>> {
+        self.by_square.get(&square)
     }
+
+    pub fn count_attackers_for_player(&self, square: usize, player: Player) -> usize {
+        match self.get_attacking_pieces(square) {
+            Some(pieces) =>
+                pieces.iter()
+                    .filter(|p| p.player == player)
+                    .count(),
+            None => 0
+        }
+    }
+
+    pub fn is_attacked_by(&self, square: usize, player: Player) -> bool {
+        self.count_attackers_for_player(square, player) > 0
+    }
+}
+
+#[derive(Debug, PartialEq, Clone, Copy)]
+struct SquareOccupier {
+    square: usize,
+    player: Player,
+    piece: ChessPiece,
 }

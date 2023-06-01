@@ -1,31 +1,34 @@
-#[derive(Debug, PartialEq, Clone, Copy)]
+use crate::{pieces::{PlayerPiece, Player, ChessPiece, ChessSquare, BoardBySquares}, square_attackers::AttackingPieces};
+
+#[derive(Debug, Clone)]
 pub struct Chess {
-    board: [Option<SquareOccupier>; 64],
+    board: BoardBySquares,
     player_turn: Player,
     white_castling_conditions: CastlingConditions,
     black_castling_conditions: CastlingConditions,
+    attackers: AttackingPieces,
 }
 
 impl Chess {
     pub fn new() -> Chess {
         Chess {
             board: [
-                Some(SquareOccupier { player: Player::White, piece: ChessPiece::Rook }),
-                Some(SquareOccupier { player: Player::White, piece: ChessPiece::Knight }),
-                Some(SquareOccupier { player: Player::White, piece: ChessPiece::Bishop }),
-                Some(SquareOccupier { player: Player::White, piece: ChessPiece::Queen }),
-                Some(SquareOccupier { player: Player::White, piece: ChessPiece::King }),
-                Some(SquareOccupier { player: Player::White, piece: ChessPiece::Bishop }),
-                Some(SquareOccupier { player: Player::White, piece: ChessPiece::Knight }),
-                Some(SquareOccupier { player: Player::White, piece: ChessPiece::Rook }),
-                Some(SquareOccupier { player: Player::White, piece: ChessPiece::Pawn }),
-                Some(SquareOccupier { player: Player::White, piece: ChessPiece::Pawn }),
-                Some(SquareOccupier { player: Player::White, piece: ChessPiece::Pawn }),
-                Some(SquareOccupier { player: Player::White, piece: ChessPiece::Pawn }),
-                Some(SquareOccupier { player: Player::White, piece: ChessPiece::Pawn }),
-                Some(SquareOccupier { player: Player::White, piece: ChessPiece::Pawn }),
-                Some(SquareOccupier { player: Player::White, piece: ChessPiece::Pawn }),
-                Some(SquareOccupier { player: Player::White, piece: ChessPiece::Pawn }),
+                Some(PlayerPiece { player: Player::White, piece: ChessPiece::Rook }),
+                Some(PlayerPiece { player: Player::White, piece: ChessPiece::Knight }),
+                Some(PlayerPiece { player: Player::White, piece: ChessPiece::Bishop }),
+                Some(PlayerPiece { player: Player::White, piece: ChessPiece::Queen }),
+                Some(PlayerPiece { player: Player::White, piece: ChessPiece::King }),
+                Some(PlayerPiece { player: Player::White, piece: ChessPiece::Bishop }),
+                Some(PlayerPiece { player: Player::White, piece: ChessPiece::Knight }),
+                Some(PlayerPiece { player: Player::White, piece: ChessPiece::Rook }),
+                Some(PlayerPiece { player: Player::White, piece: ChessPiece::Pawn }),
+                Some(PlayerPiece { player: Player::White, piece: ChessPiece::Pawn }),
+                Some(PlayerPiece { player: Player::White, piece: ChessPiece::Pawn }),
+                Some(PlayerPiece { player: Player::White, piece: ChessPiece::Pawn }),
+                Some(PlayerPiece { player: Player::White, piece: ChessPiece::Pawn }),
+                Some(PlayerPiece { player: Player::White, piece: ChessPiece::Pawn }),
+                Some(PlayerPiece { player: Player::White, piece: ChessPiece::Pawn }),
+                Some(PlayerPiece { player: Player::White, piece: ChessPiece::Pawn }),
                 None,
                 None,
                 None,
@@ -58,22 +61,22 @@ impl Chess {
                 None,
                 None,
                 None,
-                Some(SquareOccupier { player: Player::Black, piece: ChessPiece::Pawn }),
-                Some(SquareOccupier { player: Player::Black, piece: ChessPiece::Pawn }),
-                Some(SquareOccupier { player: Player::Black, piece: ChessPiece::Pawn }),
-                Some(SquareOccupier { player: Player::Black, piece: ChessPiece::Pawn }),
-                Some(SquareOccupier { player: Player::Black, piece: ChessPiece::Pawn }),
-                Some(SquareOccupier { player: Player::Black, piece: ChessPiece::Pawn }),
-                Some(SquareOccupier { player: Player::Black, piece: ChessPiece::Pawn }),
-                Some(SquareOccupier { player: Player::Black, piece: ChessPiece::Pawn }),
-                Some(SquareOccupier { player: Player::Black, piece: ChessPiece::Rook }),
-                Some(SquareOccupier { player: Player::Black, piece: ChessPiece::Knight }),
-                Some(SquareOccupier { player: Player::Black, piece: ChessPiece::Bishop }),
-                Some(SquareOccupier { player: Player::Black, piece: ChessPiece::King }),
-                Some(SquareOccupier { player: Player::Black, piece: ChessPiece::Queen }),
-                Some(SquareOccupier { player: Player::Black, piece: ChessPiece::Bishop }),
-                Some(SquareOccupier { player: Player::Black, piece: ChessPiece::Knight }),                
-                Some(SquareOccupier { player: Player::Black, piece: ChessPiece::Rook }),
+                Some(PlayerPiece { player: Player::Black, piece: ChessPiece::Pawn }),
+                Some(PlayerPiece { player: Player::Black, piece: ChessPiece::Pawn }),
+                Some(PlayerPiece { player: Player::Black, piece: ChessPiece::Pawn }),
+                Some(PlayerPiece { player: Player::Black, piece: ChessPiece::Pawn }),
+                Some(PlayerPiece { player: Player::Black, piece: ChessPiece::Pawn }),
+                Some(PlayerPiece { player: Player::Black, piece: ChessPiece::Pawn }),
+                Some(PlayerPiece { player: Player::Black, piece: ChessPiece::Pawn }),
+                Some(PlayerPiece { player: Player::Black, piece: ChessPiece::Pawn }),
+                Some(PlayerPiece { player: Player::Black, piece: ChessPiece::Rook }),
+                Some(PlayerPiece { player: Player::Black, piece: ChessPiece::Knight }),
+                Some(PlayerPiece { player: Player::Black, piece: ChessPiece::Bishop }),
+                Some(PlayerPiece { player: Player::Black, piece: ChessPiece::King }),
+                Some(PlayerPiece { player: Player::Black, piece: ChessPiece::Queen }),
+                Some(PlayerPiece { player: Player::Black, piece: ChessPiece::Bishop }),
+                Some(PlayerPiece { player: Player::Black, piece: ChessPiece::Knight }),                
+                Some(PlayerPiece { player: Player::Black, piece: ChessPiece::Rook }),
             ],
             player_turn: Player::White,
             white_castling_conditions: CastlingConditions {
@@ -86,7 +89,12 @@ impl Chess {
                 kingside_rook_has_moved: false,
                 queenside_rook_has_moved: false,
             },
+            attackers: AttackingPieces::new(),
         }
+    }
+
+    pub fn apply_move(&self, action: &ChessAction) -> MoveResult {
+        MoveResult::InvalidMove { reason: "not implemented".to_owned() }
     }
 
     fn is_legal_move(&self, action: &ChessAction, last_move: &PieceMove) -> bool {
@@ -272,7 +280,7 @@ impl Chess {
                 let last_was_two_square_move = last_row_from.abs_diff(last_row_to) == 2;
 
                 if capture_to_last_col && pawns_on_same_rank && last_was_two_square_move {
-                    if let Some(SquareOccupier { player: last_player, piece: ChessPiece::Pawn }) = board[last_move.to] {
+                    if let Some(PlayerPiece { player: last_player, piece: ChessPiece::Pawn }) = board[last_move.to] {
                         if last_player != *player {
                             return true;
                         }
@@ -390,7 +398,7 @@ impl Chess {
         from_column.abs_diff(to_column)
     }
     fn is_square_attacked_by_opponent(&self, square: usize) -> bool {
-        true
+        self.attackers.is_attacked_by(square, self.player_turn.opponent())
     }
     fn get_row(square: usize) -> usize {
         square / 8
@@ -398,16 +406,6 @@ impl Chess {
     fn get_column(square: usize) -> usize {
         square % 8
     }
-
-    fn apply_move(&self, action: &ChessAction) -> MoveResult {
-        MoveResult::InvalidMove { reason: "not implemented".to_owned() }
-    }
-}
-
-#[derive(Debug, PartialEq, Clone, Copy)]
-pub struct SquareOccupier {
-    player: Player,
-    piece: ChessPiece,
 }
 
 #[derive(Debug, PartialEq, Clone, Copy)]
@@ -421,16 +419,6 @@ pub enum ChessAction {
 pub struct PieceMove {
     from: usize,
     to: usize,
-}
-
-#[derive(Debug, PartialEq, Clone, Copy)]
-pub enum ChessPiece {
-    King,
-    Queen,
-    Rook,
-    Bishop,
-    Knight,
-    Pawn,
 }
 
 #[derive(Debug, PartialEq, Clone, Copy)]
@@ -453,167 +441,118 @@ pub enum GameOutcome {
     Winner(Player),
 }
 
-#[derive(Debug, PartialEq, Copy, Clone)]
-pub enum Player {
-    White,
-    Black,
-}
-
-impl Player {
-    pub fn next_turn(&self) -> Player {
-        match self {
-            Player::White => Player::Black,
-            Player::Black => Player::White,
-        }
-    }
-}
-
-
-#[derive(Debug, PartialEq, Clone, Copy)]
-pub enum ChessSquare {
-    A1,
-    A2,
-    A3,
-    A4,
-    A5,
-    A6,
-    A7,
-    A8,
-    B1,
-    B2,
-    B3,
-    B4,
-    B5,
-    B6,
-    B7,
-    B8,
-    C1,
-    C2,
-    C3,
-    C4,
-    C5,
-    C6,
-    C7,
-    C8,
-    D1,
-    D2,
-    D3,
-    D4,
-    D5,
-    D6,
-    D7,
-    D8,
-    E1,
-    E2,
-    E3,
-    E4,
-    E5,
-    E6,
-    E7,
-    E8,
-    F1,
-    F2,
-    F3,
-    F4,
-    F5,
-    F6,
-    F7,
-    F8,
-    G1,
-    G2,
-    G3,
-    G4,
-    G5,
-    G6,
-    G7,
-    G8,
-    H1,
-    H2,
-    H3,
-    H4,
-    H5,
-    H6,
-    H7,
-    H8,
-}
-
-impl ChessSquare {
-    fn to_square_index(&self) -> usize {
-        match self {
-            ChessSquare::A1 => 0,
-            ChessSquare::A2 => 8,
-            ChessSquare::A3 => 16,
-            ChessSquare::A4 => 24,
-            ChessSquare::A5 => 32,
-            ChessSquare::A6 => 40,
-            ChessSquare::A7 => 48,
-            ChessSquare::A8 => 56,
-            ChessSquare::B1 => 1,
-            ChessSquare::B2 => 9,
-            ChessSquare::B3 => 17,
-            ChessSquare::B4 => 25,
-            ChessSquare::B5 => 33,
-            ChessSquare::B6 => 41,
-            ChessSquare::B7 => 49,
-            ChessSquare::B8 => 57,
-            ChessSquare::C1 => 2,
-            ChessSquare::C2 => 10,
-            ChessSquare::C3 => 18,
-            ChessSquare::C4 => 26,
-            ChessSquare::C5 => 34,
-            ChessSquare::C6 => 42,
-            ChessSquare::C7 => 50,
-            ChessSquare::C8 => 58,
-            ChessSquare::D1 => 3,
-            ChessSquare::D2 => 11,
-            ChessSquare::D3 => 19,
-            ChessSquare::D4 => 27,
-            ChessSquare::D5 => 35,
-            ChessSquare::D6 => 43,
-            ChessSquare::D7 => 51,
-            ChessSquare::D8 => 59,
-            ChessSquare::E1 => 4,
-            ChessSquare::E2 => 12,
-            ChessSquare::E3 => 20,
-            ChessSquare::E4 => 28,
-            ChessSquare::E5 => 36,
-            ChessSquare::E6 => 44,
-            ChessSquare::E7 => 52,
-            ChessSquare::E8 => 60,
-            ChessSquare::F1 => 5,
-            ChessSquare::F2 => 13,
-            ChessSquare::F3 => 21,
-            ChessSquare::F4 => 29,
-            ChessSquare::F5 => 37,
-            ChessSquare::F6 => 45,
-            ChessSquare::F7 => 53,
-            ChessSquare::F8 => 61,
-            ChessSquare::G1 => 6,
-            ChessSquare::G2 => 14,
-            ChessSquare::G3 => 22,
-            ChessSquare::G4 => 30,
-            ChessSquare::G5 => 38,
-            ChessSquare::G6 => 46,
-            ChessSquare::G7 => 54,
-            ChessSquare::G8 => 62,
-            ChessSquare::H1 => 7,
-            ChessSquare::H2 => 15,
-            ChessSquare::H3 => 23,
-            ChessSquare::H4 => 31,
-            ChessSquare::H5 => 39,
-            ChessSquare::H6 => 47,
-            ChessSquare::H7 => 55,
-            ChessSquare::H8 => 63,
-        }
-    }
-}
-
 #[cfg(test)]
 mod tests {
+    use crate::pieces::{PlayerPieceOnSquare, board_by_pieces_to_squares};
+
     use super::*;
 
-    #[test]
-    fn test_something() {
-        
+    fn replay_game(actions: Vec<ChessAction>) -> Chess {
+        let game = Chess::new();
+
+        for action in actions {
+            game.apply_move(&action);
+        }
+
+        game
     }
+
+    #[test]
+    fn test_apply_move_scholars_mate() {
+        let actions = get_scholars_mate_game();
+
+        let expected_board_by_pieces = vec![
+            PlayerPieceOnSquare {
+                piece: PlayerPiece { player: Player::White, piece: ChessPiece::King },
+                square: ChessSquare::A1,
+            },
+            PlayerPieceOnSquare {
+                piece: PlayerPiece { player: Player::Black, piece: ChessPiece::King },
+                square: ChessSquare::A1,
+            },
+        ];
+        let expected_attackers = AttackingPieces::new();
+        // expected_attackers.add_attacker(square, attacker)
+        
+        
+        let expected_end_state = Chess {
+            board: board_by_pieces_to_squares(&expected_board_by_pieces),
+            player_turn: Player::Black,
+            white_castling_conditions: CastlingConditions { king_has_moved: false, kingside_rook_has_moved: false, queenside_rook_has_moved: false, },
+            black_castling_conditions: CastlingConditions { king_has_moved: false, kingside_rook_has_moved: false, queenside_rook_has_moved: false, },
+            attackers: expected_attackers,
+        };
+
+        let actual_end_state = replay_game(actions);
+
+        assert_eq!(expected_end_state, actual_end_state);
+    }
+
+    #[test]
+    fn test_apply_move_test_game_1() {
+
+    }
+
+    #[test]
+    fn test_apply_move_test_game_2() {
+
+    }
+}
+
+/*
+The classic Scholar's Mate (4 move checkmate)
+ */
+fn get_scholars_mate_game() -> Vec<ChessAction> {
+    vec![
+        ChessAction::MovePiece(PieceMove {
+            from: ChessSquare::E2.to_square_index(),
+            to: ChessSquare::E4.to_square_index(),
+        }),
+        ChessAction::MovePiece(PieceMove {
+            from: ChessSquare::E7.to_square_index(),
+            to: ChessSquare::E8.to_square_index(),
+        }),
+        ChessAction::MovePiece(PieceMove {
+            from: ChessSquare::F1.to_square_index(),
+            to: ChessSquare::C4.to_square_index(),
+        }),
+        ChessAction::MovePiece(PieceMove {
+            from: ChessSquare::B8.to_square_index(),
+            to: ChessSquare::C6.to_square_index(),
+        }),
+        ChessAction::MovePiece(PieceMove {
+            from: ChessSquare::D1.to_square_index(),
+            to: ChessSquare::F3.to_square_index(),
+        }),
+        ChessAction::MovePiece(PieceMove {
+            from: ChessSquare::B7.to_square_index(),
+            to: ChessSquare::B6.to_square_index(),
+        }),
+        ChessAction::MovePiece(PieceMove {
+            from: ChessSquare::F3.to_square_index(),
+            to: ChessSquare::F7.to_square_index(),
+        }),
+    ]
+}
+
+/*
+John Nunn vs Igor Stohl
+Pardubice (1993), Pardubice CZE, rd 6
+Caro-Kann Defense: Advance. Short Variation (B12)  ·  1-0
+ */
+fn get_test_game_1() -> Vec<ChessAction> {
+    vec![
+
+    ]
+}
+
+/*
+John Nunn vs Matthew Sadler
+17th Lloyds Bank Masters Open (1993), London ENG, rd 9, Aug-29
+Sicilian Defense: Najdorf Variation. English Attack (B90)  ·  1-0
+ */
+fn get_test_game_2() -> Vec<ChessAction> {
+    vec![
+
+    ]
 }
